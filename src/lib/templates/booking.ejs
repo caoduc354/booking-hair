@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thông báo lịch hẹn</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+        background-color: #f5f5f5;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        background-color: #ffffff;
+        padding: 24px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      .header {
+        text-align: center;
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+      }
+      .header h1 {
+        color: #333333;
+        margin: 0;
+        font-size: 20px;
+      }
+      .content {
+        color: #555555;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .content strong {
+        color: #000000;
+      }
+      .footer {
+        margin-top: 32px;
+        font-size: 12px;
+        color: #999999;
+        text-align: center;
+        border-top: 1px solid #e0e0e0;
+        padding-top: 16px;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>📅 Lịch Hẹn Mới Đã Được Đặt</h1>
+      </div>
+
+      <div class="content">
+        <p>Xin chào <strong><%= barberName %></strong>,</p>
+
+        <p>
+          Bạn vừa nhận được một lịch hẹn mới với khách hàng
+          <strong><%= customerName %></strong>.
+        </p>
+
+        <p>
+          <strong>⏰ Thời gian:</strong> <%= appointmentTime %><br />
+          <strong>📍 Địa điểm:</strong> <%= location %>
+        </p>
+
+        <p>
+          Vui lòng kiểm tra thông tin và chuẩn bị sẵn sàng. Bạn có thể thêm lịch
+          này vào Google Calendar hoặc Outlook từ file đính kèm.
+        </p>
+
+        <p>
+          Trân trọng,<br />
+          <strong>Barber Booking System</strong>
+        </p>
+      </div>
+
+      <div class="footer">
+        Đây là email tự động. Vui lòng không trả lời trực tiếp. <br />
+        Nếu bạn cần hỗ trợ, vui lòng liên hệ quản trị viên hệ thống.
+      </div>
+    </div>
+  </body>
+</html>

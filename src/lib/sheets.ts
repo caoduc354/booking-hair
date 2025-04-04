@@ -3,7 +3,7 @@ import { JWT } from "google-auth-library";
 import credentials from "./credentials.json" assert { type: "json" };
 
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
-const SPREADSHEET_ID = "10Ay6PY1cmLK56V7KuZnBDn8vFXUOH7zNSynlEU9hxB0";
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
 const jwtClient = new JWT({
   email: credentials.client_email,
@@ -27,8 +27,11 @@ export interface BookingPayload {
 
 export interface Barber {
   STT: string;
-  "Tên Nhân Viên": string;
+  Name: string;
   Ranking: string;
+  Email: string;
+  Image: string;
+  Fullname: string;
 }
 
 export interface CheckExistPayload {
@@ -40,19 +43,18 @@ export interface CheckExistPayload {
 
 export interface BookingSlotPayload {
   date: string;
-  barber: string;
+  barber: any;
 }
 
 export async function getDataNV(): Promise<Barber[]> {
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: "Employee!A1:C",
+    range: "Employee!A1:F",
   });
 
   const rows = res.data.values || [];
   const headers = rows[0] as string[];
   const data = rows.slice(1);
-
   return data.map((row) => {
     const obj: Record<string, string> = {};
     headers.forEach((key, i) => (obj[key] = row[i] || ""));
@@ -102,13 +104,14 @@ export async function bookingSlot(data: BookingSlotPayload) {
   });
 
   const rows = res.data.values || [];
-
   const bookedSlots = rows
     .filter((row) => {
       const formatted = new Date(row[0]).toLocaleDateString("en-CA");
-      return formatted === date && row[3] === barber;
+      return formatted === date && row[3] === barber.name;
     })
     .map((row) => row[1]); // lấy Time
+
+  console.log("bookedSlots", bookedSlots);
 
   return bookedSlots;
 }

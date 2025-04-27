@@ -6,7 +6,6 @@ import Select from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
-const ranks = ["Junior", "Senior", "Master"];
 const statuses = ["available", "booked", "busy"];
 
 const generateTimeslots = () => {
@@ -20,11 +19,17 @@ const generateTimeslots = () => {
 
 export default function BookingHaircut() {
   type Barber = {
+    STT: string;
     name: string;
     email: string;
     avatar: string;
-    fullname: string;
+    phone: string;
+    productImages: string[];
+    activityImage: string;
+    clientImage: string;
+    businessHours: string;
   };
+
   const [barbersByRank, setBarbersByRank] = useState<Record<string, Barber[]>>(
     {}
   );
@@ -49,10 +54,9 @@ export default function BookingHaircut() {
 
   const [pendingBarber, setPendingBarber] = useState<Barber | null>(null);
   const [showBarberModal, setShowBarberModal] = useState(false);
-
+  const [ranks, setRanks] = useState<string[]>([]);
   const timeslots = generateTimeslots();
-
-  // Fetch barber data
+  // Fetch barbers + lấy luôn ranks
   useEffect(() => {
     const fetchBarbers = async () => {
       const res = await fetch("/api/barbers");
@@ -61,16 +65,38 @@ export default function BookingHaircut() {
         (
           acc: Record<
             string,
-            { name: string; email: string; avatar: string; fullname: string }[]
+            {
+              STT: string;
+              name: string;
+              email: string;
+              avatar: string;
+              phone: string;
+              productImages: string[];
+              activityImage: string;
+              clientImage: string;
+              businessHours: string;
+            }[]
           >,
           b: any
         ) => {
+          // Khởi tạo group cho Ranking nếu chưa có
           acc[b.Ranking] = acc[b.Ranking] || [];
+
+          // Thêm thông tin vào group của Ranking
           acc[b.Ranking].push({
-            name: b.Name,
-            email: b.Mail,
-            avatar: b.Image,
-            fullname: b.Fullname,
+            STT: b.STT || "", // Cột STT
+            name: b.Name || "", // Cột Name
+            email: b.Email || "", // Cột Email
+            avatar: b.AvatarUrl || "", // Cột Avatar
+            phone: b.Phone || "", // Cột Phone
+            productImages: [
+              b.ProductImage1 || "",
+              b.ProductImage2 || "",
+              b.ProductImage3 || "",
+            ], // Ảnh sản phẩm
+            activityImage: b.ActivityImage || "", // Cột ActivityImage
+            clientImage: b.ClientImage || "", // Cột ClientImage
+            businessHours: b.BusinessHours || "", // Cột giờ làm việc
           });
           return acc;
         },
@@ -78,6 +104,16 @@ export default function BookingHaircut() {
       );
 
       setBarbersByRank(grouped);
+
+      // Set danh sách rank duy nhất
+      const uniqueRanks: any = Array.from(
+        new Set(
+          barbers
+            .map((b: any) => b.Ranking)
+            .filter((ranking: string) => ranking && ranking.length > 0)
+        )
+      );
+      setRanks(uniqueRanks);
     };
 
     fetchBarbers();
@@ -196,11 +232,12 @@ export default function BookingHaircut() {
     return "";
   };
 
+
   return (
-    <div className="p-6 max-w-lg mx-auto space-y-6">
+    <div className="max-w-lg p-6 mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-center">Đặt vé cắt tóc</h1>
 
-      <div className="flex justify-between items-center bg-gray-100 p-3 rounded-lg">
+      <div className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 bg-green-100 rounded" />
           <span>Có thể đặt</span>
@@ -223,6 +260,19 @@ export default function BookingHaircut() {
       <div>
         <h2 className="text-lg font-semibold">Chọn hạng thợ cắt tóc</h2>
         <div className="flex space-x-2">
+          {/* {ranks.map((rank) => (
+            <Button
+              key={rank}
+              variant={selectedRank === rank ? "default" : "outline"}
+              onClick={() => {
+                setSelectedRank(rank);
+                setSelectedBarber(null);
+              }}
+            >
+              {rank}
+            </Button>
+          ))} */}
+
           {ranks.map((rank) => (
             <Button
               key={rank}
@@ -270,9 +320,9 @@ export default function BookingHaircut() {
         <div>
           <h2 className="text-lg font-semibold">Chọn khung giờ</h2>
           {loadingSlots ? (
-            <div className="flex items-center justify-center space-x-2 mt-2">
+            <div className="flex items-center justify-center mt-2 space-x-2">
               <svg
-                className="animate-spin h-5 w-5 text-gray-500"
+                className="w-5 h-5 text-gray-500 animate-spin"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -291,7 +341,7 @@ export default function BookingHaircut() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 ></path>
               </svg>
-              <span className="text-gray-500 italic">
+              <span className="italic text-gray-500">
                 Đang tải khung giờ...
               </span>
             </div>
@@ -345,7 +395,7 @@ export default function BookingHaircut() {
         </div>
       )}
 
-      <div className="text-center space-y-2">
+      <div className="space-y-2 text-center">
         <Button
           variant="default"
           onClick={handleSubmit}
@@ -354,7 +404,7 @@ export default function BookingHaircut() {
           {isSubmitting ? (
             <div className="flex items-center justify-center space-x-2">
               <svg
-                className="animate-spin h-4 w-4 text-white"
+                className="w-4 h-4 text-white animate-spin"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -393,22 +443,22 @@ export default function BookingHaircut() {
           ></div>
 
           {/* modal box */}
-          <div className="relative bg-white rounded-xl p-6 shadow-xl text-center max-w-sm w-full animate-fadeInScale space-y-4 z-10">
+          <div className="relative z-10 w-full max-w-sm p-6 space-y-4 text-center bg-white shadow-xl rounded-xl animate-fadeInScale">
             <img
-              src={"/images-nam.png"}
-              alt={pendingBarber.name}
-              className="w-24 h-24 rounded-full mx-auto object-cover"
+              src={pendingBarber.avatar}
+              alt={pendingBarber?.name || "Unknown Barber"}
+              className="object-cover w-24 h-24 mx-auto rounded-full"
             />
-            <h3 className="text-xl font-bold">{pendingBarber.fullname}</h3>
+            <h3 className="text-xl font-bold">{pendingBarber.name}</h3>
             {pendingBarber.email && (
               <p className="text-sm text-gray-500">
                 Email: {pendingBarber.email}
               </p>
             )}
-            <p className="text-gray-600 text-sm italic">
+            <p className="text-sm italic text-gray-600">
               {selectedRank} Barber tại ELITE Barbershop
             </p>
-            <div className="flex gap-4 justify-center pt-4">
+            <div className="flex justify-center gap-4 pt-4">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -438,14 +488,14 @@ export default function BookingHaircut() {
           <div className="absolute inset-0 bg-black bg-opacity-40"></div>
 
           {/* modal box */}
-          <div className="relative bg-white rounded-xl p-6 shadow-xl text-center max-w-sm w-full animate-fadeInScale">
-            <h2 className="text-xl font-bold mb-4 text-green-600">
+          <div className="relative w-full max-w-sm p-6 text-center bg-white shadow-xl rounded-xl animate-fadeInScale">
+            <h2 className="mb-4 text-xl font-bold text-green-600">
               🎉 Đặt lịch cắt tóc thành công!
             </h2>
             <p className="mb-4 text-gray-700">
               Cảm ơn bạn đã đặt lịch. Hẹn gặp lại tại <strong>ELITE</strong>!
             </p>
-            <div className="text-left text-sm text-gray-600 bg-gray-50 p-4 rounded mb-4 border">
+            <div className="p-4 mb-4 text-sm text-left text-gray-600 border rounded bg-gray-50">
               <p>
                 <strong>Ngày:</strong> {confirmedBooking.date}
               </p>

@@ -1,6 +1,9 @@
 import { google, sheets_v4 } from "googleapis";
 import { JWT } from "google-auth-library";
+import { downloadImage } from "@/lib/download";
 import credentials from "./credentials.json" assert { type: "json" };
+import axios from "axios";
+import { load } from "cheerio";
 
 const SCOPES = ["https://www.googleapis.com/auth/spreadsheets"];
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
@@ -29,9 +32,9 @@ export interface Barber {
   STT: string;
   Name: string;
   Ranking: string;
+  Phone: string;
   Email: string;
-  Image: string;
-  Fullname: string;
+  AvatarUrl: string; // ảnh mặt chính diện
 }
 
 export interface CheckExistPayload {
@@ -46,20 +49,72 @@ export interface BookingSlotPayload {
   barber: any;
 }
 
+const convertToDriveImageUrl = (googleDriveUrl: string) => {
+  // Tìm kiếm phần ID trong URL
+  const match = googleDriveUrl.match(/\/d\/(.*?)\//);
+
+  if (match && match[1]) {
+    const fileId = match[1];
+    // Trả về URL có thể dùng trong thẻ <img>
+    return `https://drive.google.com/uc?export=view&id=${fileId}`;
+  } else {
+    throw new Error("Invalid Google Drive URL");
+  }
+};
+
 export async function getDataNV(): Promise<Barber[]> {
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: "Employee!A1:F",
+    range: "Employee!A2:M", // Lấy từ A đến G (STT đến Ảnh mặt chính diện)
   });
 
   const rows = res.data.values || [];
-  const headers = rows[0] as string[];
-  const data = rows.slice(1);
-  return data.map((row) => {
-    const obj: Record<string, string> = {};
-    headers.forEach((key, i) => (obj[key] = row[i] || ""));
-    return obj as any;
-  });
+
+  // Tải ảnh và lưu vào thư mục public
+  const downloadAndSaveImage = async (imageUrl: string, index: number) => {
+    if (imageUrl) {
+      // Lấy tên file từ URL (bạn có thể thay đổi cách đặt tên file)
+      const fileName = `avatar_${index}.jpg`; // Ví dụ: avatar_1.jpg
+      await downloadImage(imageUrl, fileName);
+      return `/images/${fileName}`; // Trả về đường dẫn ảnh trong thư mục public
+    }
+    return "";
+  };
+
+  const barbers = await Promise.all(
+    rows
+      .filter((row) => row[0]) // Chỉ lấy các dòng có STT (cột 0 không rỗng)
+      .map(async (row, index) => {
+        const avatarUrl = await downloadAndSaveImage(
+          convertToDriveImageUrl(row[5]) || "",
+          index
+        ); // Cột F: ảnh mặt chính diện
+
+        return {
+          STT: row[0] || "",
+          Name: row[1] || "",
+          Ranking: row[2] || "",
+          Phone: row[3] || "",
+          Email: row[4] || "",
+          AvatarUrl: avatarUrl, // Lưu đường dẫn ảnh đã tải về
+          ProductImage: [row[6] || "", row[7] || "", row[8] || ""],
+          ActivityImage: row[9] || "", // Cột J: ảnh hoạt động 1
+          ClientImage: row[10] || "", // Cột K: ảnh hoạt động 2
+          BusinessHours: row[11] || "", // Cột L: giờ làm việc 1
+        };
+      })
+  );
+
+  console.log("barbers", barbers); // Log the barbers array for debugging
+
+  return barbers;
+}
+
+function extractImageUrl(cellData: string): string {
+  if (!cellData) return "";
+
+  const match = cellData.match(/"(https?:\/\/[^"]+)"/);
+  return match ? match[1] : "";
 }
 
 export async function appendBooking(data: BookingPayload) {

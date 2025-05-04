@@ -2,14 +2,14 @@
 module.exports = {
   theme: {
     extend: {
-      keyframes: {
-        fadeInScale: {
-          "0%": { opacity: 0, transform: "scale(0.9)" },
-          "100%": { opacity: 1, transform: "scale(1)" },
-        },
-      },
       animation: {
-        fadeInScale: "fadeInScale 0.3s ease-out forwards",
+        fade: "fade 10s infinite ease-in-out",
+      },
+      keyframes: {
+        fade: {
+          "0%, 100%": { opacity: "0.2" },
+          "50%": { opacity: "0.4" },
+        },
       },
     },
   },

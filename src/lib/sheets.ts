@@ -61,6 +61,7 @@ export async function getDataNV(): Promise<Barber[]> {
       .map(async (row, index) => {
         const name = row[1] || "";
         const avatarUrl = getAvatarUrlByName(name);
+        const otherImages = getOtherImagesByName(name);
         return {
           STT: row[0] || "",
           Name: row[1] || "",
@@ -68,7 +69,7 @@ export async function getDataNV(): Promise<Barber[]> {
           Phone: row[3] || "",
           Email: row[4] || "",
           AvatarUrl: avatarUrl,
-          ProductImage: [row[6] || "", row[7] || "", row[8] || ""],
+          ProductImage: otherImages,
           ActivityImage: row[9] || "", // Cột J: ảnh hoạt động 1
           ClientImage: row[10] || "", // Cột K: ảnh hoạt động 2
           BusinessHours: row[11] || "", // Cột L: giờ làm việc 1
@@ -79,16 +80,37 @@ export async function getDataNV(): Promise<Barber[]> {
   return barbers;
 }
 
+function getOtherImagesByName(name: string): string[] {
+  const basePath = path.join(process.cwd(), "public", "images", name);
+
+  if (!fs.existsSync(basePath)) return [];
+
+  const files = fs.readdirSync(basePath);
+
+  // Lọc ra các ảnh không phải avatar
+  const imageFiles = files.filter((file) => {
+    const lower = file.toLowerCase();
+    return (
+      (lower.endsWith(".jpg") || lower.endsWith(".png")) &&
+      lower !== "avatar.jpg" &&
+      lower !== "avatar.png"
+    );
+  });
+
+  // Trả về URL tương đối
+  return imageFiles.map((file) => `/images/${name}/${file}`);
+}
+
 function getAvatarUrlByName(name: string): string {
-  const safeName = name.trim().replace(/\s+/g, "_");
-  const basePath = path.join(process.cwd(), "public", "images", safeName);
+  // const safeName = name.trim().replace(/\s+/g, "_");
+  const basePath = path.join(process.cwd(), "public", "images", name);
   const jpgPath = path.join(basePath, "avatar.jpg");
   const pngPath = path.join(basePath, "avatar.png");
 
   if (fs.existsSync(jpgPath)) {
-    return `/images/${safeName}/avatar.jpg`;
+    return `/images/${name}/avatar.jpg`;
   } else if (fs.existsSync(pngPath)) {
-    return `/images/${safeName}/avatar.png`;
+    return `/images/${name}/avatar.png`;
   } else {
     return "/images/default-avatar.jpg"; // fallback nếu không có
   }

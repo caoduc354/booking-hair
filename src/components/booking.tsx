@@ -5,14 +5,31 @@ import { Card } from "@/components/ui/card";
 import Select from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/navigation";
+import { Navigation } from "swiper/modules";
 
 const statuses = ["available", "booked", "busy"];
 
-const generateTimeslots = () => {
-  const slots = [];
-  for (let hour = 9; hour <= 18; hour++) {
-    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-    slots.push({ time: `${hour}:00`, status: randomStatus });
+// const generateTimeslots = () => {
+//   const slots = [];
+//   for (let hour = 9; hour <= 18; hour++) {
+//     const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+//     slots.push({ time: `${hour}:00`, status: randomStatus });
+//   }
+//   return slots;
+// };
+
+const parseBusinessHours = (businessHours: string): string[] => {
+  const slots: string[] = [];
+
+  const ranges = businessHours.split(","); // ["09:00-12:00", "14:00-18:00"]
+  for (const range of ranges) {
+    const [start, end] = range.split("-").map((t) => parseInt(t.split(":")[0]));
+    for (let hour = start; hour <= end; hour++) {
+      slots.push(`${hour}:00`);
+    }
   }
   return slots;
 };
@@ -55,7 +72,9 @@ export default function BookingHaircut() {
   const [pendingBarber, setPendingBarber] = useState<Barber | null>(null);
   const [showBarberModal, setShowBarberModal] = useState(false);
   const [ranks, setRanks] = useState<string[]>([]);
-  const timeslots = generateTimeslots();
+  const timeslots = selectedBarber
+    ? parseBusinessHours(selectedBarber.businessHours)
+    : [];
   // Fetch barbers + lấy luôn ranks
   useEffect(() => {
     const fetchBarbers = async () => {
@@ -89,11 +108,7 @@ export default function BookingHaircut() {
             email: b.Email || "", // Cột Email
             avatar: b.AvatarUrl || "", // Cột Avatar
             phone: b.Phone || "", // Cột Phone
-            productImages: [
-              b.ProductImage1 || "",
-              b.ProductImage2 || "",
-              b.ProductImage3 || "",
-            ], // Ảnh sản phẩm
+            productImages: b.ProductImage || [], // Ảnh sản phẩm
             activityImage: b.ActivityImage || "", // Cột ActivityImage
             clientImage: b.ClientImage || "", // Cột ClientImage
             businessHours: b.BusinessHours || "", // Cột giờ làm việc
@@ -232,22 +247,21 @@ export default function BookingHaircut() {
     return "";
   };
 
-
   return (
     <div className="max-w-lg p-6 mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-center">Đặt vé cắt tóc</h1>
 
-      <div className="flex items-center justify-between p-3 bg-gray-100 rounded-lg">
+      <div className="flex items-center justify-between p-3 bg-gray-200 border-2 border-black rounded-lg">
         <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-green-100 rounded" />
+          <div className="w-4 h-4 bg-green-200 rounded" />
           <span>Có thể đặt</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-red-100 rounded" />
+          <div className="w-4 h-4 bg-red-200 rounded" />
           <span>Đã đặt</span>
         </div>
         <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 bg-gray-200 rounded" />
+          <div className="w-4 h-4 bg-gray-400 rounded" />
           <span>Bận</span>
         </div>
       </div>
@@ -347,7 +361,7 @@ export default function BookingHaircut() {
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-2">
-              {timeslots.map(({ time }) => {
+              {timeslots.map((time) => {
                 const isBooked = bookedSlots.includes(time);
                 const status = isBooked ? "booked" : "available";
                 return (
@@ -362,7 +376,13 @@ export default function BookingHaircut() {
                       selectedTime === time && "ring-2 ring-blue-500"
                     )}
                   >
-                    <Card className="p-2">{time}</Card>
+                    <Card
+                      className="p-2"
+                      selected={selectedTime === time}
+                      onClick={() => !isBooked && setSelectedTime(time)}
+                    >
+                      {time}
+                    </Card>{" "}
                   </div>
                 );
               })}
@@ -443,21 +463,67 @@ export default function BookingHaircut() {
           ></div>
 
           {/* modal box */}
-          <div className="relative z-10 w-full max-w-sm p-6 space-y-4 text-center bg-white shadow-xl rounded-xl animate-fadeInScale">
+          <div className="relative z-10 w-full max-w-sm p-6 space-y-4 text-center bg-white shadow-xl rounded-xl animate-fadeInScale overflow-y-auto max-h-[90vh]">
             <img
               src={pendingBarber.avatar}
               alt={pendingBarber?.name || "Unknown Barber"}
               className="object-cover w-24 h-24 mx-auto rounded-full"
             />
             <h3 className="text-xl font-bold">{pendingBarber.name}</h3>
+
             {pendingBarber.email && (
               <p className="text-sm text-gray-500">
                 Email: {pendingBarber.email}
               </p>
             )}
+
             <p className="text-sm italic text-gray-600">
               {selectedRank} Barber tại ELITE Barbershop
             </p>
+
+            {/* Product Images */}
+            {pendingBarber.productImages.filter((img) => img).length > 0 && (
+              <div className="text-left">
+                <h4 className="mb-2 text-sm font-semibold">
+                  Công việc thường ngày :
+                </h4>
+                <Swiper
+                  modules={[Navigation]}
+                  navigation
+                  spaceBetween={10}
+                  slidesPerView={1}
+                  className="rounded"
+                >
+                  {pendingBarber.productImages
+                    .filter((img) => img)
+                    .map((img, idx) => (
+                      <SwiperSlide key={idx}>
+                        <img
+                          src={img}
+                          alt={`Product ${idx + 1}`}
+                          className="w-full h-auto rounded"
+                        />
+                      </SwiperSlide>
+                    ))}
+                </Swiper>
+              </div>
+            )}
+
+            {/* Client Image */}
+            {/* {pendingBarber.clientImage && (
+              <div>
+                <h4 className="mb-1 text-sm font-semibold text-left">
+                  Ảnh khách hàng:
+                </h4>
+                <img
+                  src={pendingBarber.clientImage}
+                  alt="Client"
+                  className="object-cover w-full h-40 rounded"
+                />
+              </div>
+            )} */}
+
+            {/* Buttons */}
             <div className="flex justify-center gap-4 pt-4">
               <Button
                 variant="outline"

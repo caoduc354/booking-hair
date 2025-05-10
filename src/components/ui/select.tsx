@@ -11,7 +11,7 @@ const Select: React.FC<SelectProps> = ({ value, onChange, children }) => {
     <select
       value={value || ""}
       onChange={onChange}
-      className="w-full p-2 border rounded-md bg-white"
+      className="w-full p-2 bg-white border rounded-md"
     >
       {children}
     </select>

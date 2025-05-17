@@ -248,10 +248,11 @@ export default function BookingHaircut() {
   };
 
   return (
-    <div className="max-w-lg p-6 mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-center">Đặt vé cắt tóc</h1>
-
-      <div className="flex items-center justify-between p-3 bg-gray-200 border-2 border-black rounded-lg">
+    <div className="w-full max-w-lg px-4 mx-auto space-y-6 sm:px-6 md:px-8">
+      <h1 className="text-2xl font-bold text-center sm:text-3xl">
+        Đặt vé cắt tóc
+      </h1>
+      <div className="flex flex-col p-3 text-sm bg-gray-200 border-2 border-black rounded-lg sm:flex-row sm:justify-between sm:text-base">
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 bg-green-200 rounded" />
           <span>Có thể đặt</span>
@@ -265,15 +266,15 @@ export default function BookingHaircut() {
           <span>Bận</span>
         </div>
       </div>
-
       <div>
-        <h2 className="text-lg font-semibold">Chọn ngày</h2>
+        <h2 className="text-lg font-semibold sm:text-xl">Chọn ngày</h2>
         <Calendar onChange={setSelectedDate} selected={selectedDate} />
       </div>
-
       <div>
-        <h2 className="text-lg font-semibold">Chọn hạng thợ cắt tóc</h2>
-        <div className="flex space-x-2">
+        <h2 className="text-lg font-semibold sm:text-xl">
+          Chọn hạng thợ cắt tóc
+        </h2>
+        <div className="flex flex-wrap gap-2">
           {/* {ranks.map((rank) => (
             <Button
               key={rank}
@@ -289,6 +290,7 @@ export default function BookingHaircut() {
 
           {ranks.map((rank) => (
             <Button
+              className="w-full"
               key={rank}
               variant={selectedRank === rank ? "default" : "outline"}
               onClick={() => {
@@ -301,10 +303,9 @@ export default function BookingHaircut() {
           ))}
         </div>
       </div>
-
       {selectedRank && (
         <div>
-          <h2 className="text-lg font-semibold">Chọn thợ cắt tóc</h2>
+          <h2 className="text-lg font-semibold sm:text-xl">Chọn thợ cắt tóc</h2>
           <Select
             onChange={(e) => {
               const selectedEmail = e.target.value;
@@ -329,10 +330,9 @@ export default function BookingHaircut() {
           </Select>
         </div>
       )}
-
       {selectedBarber && (
         <div>
-          <h2 className="text-lg font-semibold">Chọn khung giờ</h2>
+          <h2 className="text-lg font-semibold sm:text-xl">Chọn khung giờ</h2>
           {loadingSlots ? (
             <div className="flex items-center justify-center mt-2 space-x-2">
               <svg
@@ -360,7 +360,7 @@ export default function BookingHaircut() {
               </span>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
               {timeslots.map((time) => {
                 const isBooked = bookedSlots.includes(time);
                 const status = isBooked ? "booked" : "available";
@@ -390,23 +390,22 @@ export default function BookingHaircut() {
           )}
         </div>
       )}
-
       {/* Thông tin khách hàng */}
       {selectedTime && selectedBarber && (
         <div className="space-y-4">
           <div>
-            <h2 className="text-lg font-semibold">Tên khách hàng</h2>
+            <h2 className="text-lg font-semibold sm:text-xl">Tên khách hàng</h2>
             <input
-              className="w-full px-3 py-2 border rounded"
+              className="w-full px-3 py-2 text-sm border rounded"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               placeholder="Nhập tên khách"
             />
           </div>
           <div>
-            <h2 className="text-lg font-semibold">Số điện thoại</h2>
+            <h2 className="text-lg font-semibold sm:text-xl">Số điện thoại</h2>
             <input
-              className="w-full px-3 py-2 border rounded"
+              className="w-full px-3 py-2 text-sm border rounded"
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
               placeholder="Nhập số điện thoại"
@@ -414,12 +413,12 @@ export default function BookingHaircut() {
           </div>
         </div>
       )}
-
       <div className="space-y-2 text-center">
         <Button
           variant="default"
           onClick={handleSubmit}
           disabled={isDisabled || isSubmitting}
+          className="w-full"
         >
           {isSubmitting ? (
             <div className="flex items-center justify-center space-x-2">
@@ -531,10 +530,12 @@ export default function BookingHaircut() {
                   setPendingBarber(null);
                   setShowBarberModal(false);
                 }}
+                className="w-full"
               >
                 Hủy
               </Button>
               <Button
+                className="w-full"
                 onClick={() => {
                   setSelectedBarber(pendingBarber);
                   setPendingBarber(null);
@@ -547,7 +548,6 @@ export default function BookingHaircut() {
           </div>
         </div>
       )}
-
       {showSuccess && confirmedBooking && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* overlay nền đen mờ */}
